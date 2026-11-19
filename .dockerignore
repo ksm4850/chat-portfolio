@@ -1,0 +1,11 @@
+# 저장소 루트를 컨텍스트로 쓰는 빌드(deploy/web.Dockerfile)용
+**/node_modules
+**/dist
+**/.env*
+!**/.env.example
+.git
+.idea
+backend
+deploy/certs
+# 프론트 빌드에 필요 없다. 이미지·동영상은 백엔드가 서빙한다.
+content/portfolio/medias

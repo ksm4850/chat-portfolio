@@ -1,0 +1,64 @@
+[project]
+name = "voice-clone-chat"
+version = "0.1.0"
+description = "나를 복제한 캐릭터챗 (RAG + 음성 입출력)"
+requires-python = ">=3.14,<3.15"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.34.0",
+    "pydantic>=2.9.0",
+    "pydantic-settings>=2.6.0",
+    "sqlalchemy[asyncio]>=2.0.36",
+    "asyncpg>=0.30.0",
+    "alembic>=1.14.0",
+    "dependency-injector>=4.42.0",
+    "pyjwt>=2.10",
+    "pwdlib[argon2]>=0.2",
+    "python-multipart>=0.0.20",
+    "email-validator>=2.2",
+    "pgvector>=0.3",
+    "websockets>=15",
+    "redis>=5.2",
+    "openai>=1.60",
+    "ag-ui-protocol>=1.0.0",
+    "langfuse>=5.2.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "httpx>=0.28.0",
+    "ruff>=0.8.0",
+    "psycopg2-binary>=2.9",
+    "pyyaml>=6.0",
+    "deepeval>=4.3.4",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+pythonpath = ["."]
+testpaths = ["tests"]
+markers = [
+    "integration: 실제 DB가 필요한 테스트",
+    "eval: 실제 LLM 으로 답변 품질을 채점하는 eval (make eval)",
+]
+# eval 은 기본 실행에서 뺀다. deepeval 플러그인은 import 할 때 .env 를 환경변수로 올리므로
+# eval 을 돌릴 때만 켠다(`deepeval test run` 이 -p deepeval 을 붙인다).
+addopts = ["-p", "no:deepeval", "-m", "not eval"]
+filterwarnings = [
+    # 테스트용 짧은 비밀키에 대한 경고. 운영 키는 32바이트 이상을 쓴다.
+    "ignore::jwt.warnings.InsecureKeyLengthWarning",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.ruff.lint.per-file-ignores]
+# FastAPI 의존성 주입은 인자 기본값에서 Depends 를 호출한다.
+"src/interfaces/**/*.py" = ["B008"]
+"src/modules/*/router.py" = ["B008"]

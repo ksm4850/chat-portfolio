@@ -1,0 +1,201 @@
+# 포트폴리오 안내 eval 문항. 실행: make eval (tests/eval/test_guide.py)
+#
+# expect
+#   action: required(화면 액션 필수) | optional | forbidden(액션 없어야 함)
+#   anchors_any: 강조돼야 하는 anchor glob 중 하나. 검색 순위(hit@k)도 이 값으로 잰다.
+#   include_any: 답변에 하나 이상 들어가야 하는 문구
+#   exclude: 들어가면 안 되는 문구. 외부 링크(http, github.io)는 항상 금지
+#   allow_fallback: 폴백 답변도 통과로 본다
+
+cases:
+  # 추상 질문: 방문자가 처음 던질 법한 넓은 질문
+  - id: intro
+    question: 간단히 자기소개 해 주세요
+    tags: [abstract]
+    expect:
+      include_any: [백엔드, Backend]
+
+  - id: portfolio-summary
+    question: 포트폴리오 간략히 설명해줘
+    tags: [abstract, known-issue]
+    expect:
+      action: required
+      # 프로젝트 개요 섹션. 세부 섹션(배운 점 등)으로 여는 건 요약이 아니다.
+      anchors_any: ["*-overview-1"]
+
+  - id: hardest-problem
+    question: 가장 기술적으로 어려웠던 문제는 뭐였나요?
+    tags: [abstract]
+    expect:
+      action: required
+      anchors_any: ["*-decisions-*", "ecs-overview-*", "labeling-memory-bank-*"]
+
+  - id: best-project
+    question: 가장 자신 있는 프로젝트는 무엇인가요?
+    tags: [abstract]
+    expect:
+      action: required
+      anchors_any: ["phenotype-overview-*"]
+      include_any: [피노타이핑]
+
+  - id: main-stack
+    question: 주로 어떤 기술 스택을 쓰나요?
+    tags: [abstract]
+    expect:
+      include_any: [Python, FastAPI]
+
+  - id: recent-work
+    question: 최근 회사에서는 어떤 일을 했나요?
+    tags: [abstract, career]
+    expect:
+      include_any: [플레이아이디어랩]
+
+  # 프로젝트 구체 질문: 해당 섹션을 열어야 한다
+  - id: cq-overview
+    question: ML 실험 자동화 플랫폼은 어떤 프로젝트인가요?
+    tags: [project, cq]
+    expect:
+      action: required
+      anchors_any: ["cq-overview-*"]
+
+  - id: cq-firewall
+    question: 방화벽 뒤에 있는 워커에는 어떻게 접근했나요?
+    tags: [project, cq]
+    expect:
+      action: required
+      anchors_any: [cq-decisions-2]
+
+  - id: cq-llm-code
+    question: LLM이 짠 코드를 어떻게 안전하게 실행했나요?
+    tags: [project, cq]
+    expect:
+      action: required
+      anchors_any: [cq-decisions-4]
+
+  - id: cq-retro
+    question: ML 실험 자동화 플랫폼을 다시 만든다면 뭘 바꾸고 싶나요?
+    tags: [project, cq]
+    expect:
+      action: required
+      anchors_any: [cq-retro-3]
+
+  - id: ecs-why
+    question: ECS로 전환한 이유가 뭔가요?
+    tags: [project, ecs]
+    expect:
+      action: required
+      anchors_any: [ecs-overview-3, ecs-overview-1]
+
+  - id: ecs-cost
+    question: AWS 요금은 어떻게 줄였나요?
+    tags: [project, ecs]
+    expect:
+      action: required
+      anchors_any: [ecs-overview-2]
+
+  - id: phenotype-timeseries
+    question: 시계열 데이터를 대량으로 수집할 때 어떻게 처리했나요?
+    tags: [project, phenotype]
+    expect:
+      action: required
+      anchors_any: [phenotype-decisions-2]
+
+  - id: phenotype-google-health
+    question: Google Health 데이터는 어떻게 동기화했나요?
+    tags: [project, phenotype]
+    expect:
+      action: required
+      anchors_any: [phenotype-decisions-1]
+
+  - id: phenotype-auth
+    question: 디지털 피노타이핑 플랫폼의 인증은 어떻게 나눴나요?
+    tags: [project, phenotype]
+    expect:
+      action: required
+      anchors_any: [phenotype-architecture-3]
+
+  - id: phenotype-e2e
+    question: E2E 테스트는 어떻게 구성했나요?
+    tags: [project, phenotype]
+    expect:
+      action: required
+      anchors_any: [phenotype-frontend-2]
+
+  - id: labeling-auto
+    question: 오토 라벨링은 어떻게 동작하나요?
+    tags: [project, labeling]
+    expect:
+      action: required
+      anchors_any: [labeling-features-2, "labeling-memory-bank-*"]
+
+  - id: labeling-dood
+    question: 관리 서버가 컨테이너를 직접 띄우는 구조는 왜 택했나요?
+    tags: [project, labeling]
+    expect:
+      action: required
+      anchors_any: [labeling-memory-bank-3]
+
+  - id: vuka-migration
+    question: Classic ASP를 FastAPI로 옮긴 경험이 있나요?
+    tags: [project, vuka]
+    expect:
+      action: required
+      anchors_any: [vuka-app-api-overview-3]
+
+  - id: vuka-iap
+    question: 인앱결제 구현해 본 적 있어요?
+    tags: [project, vuka]
+    expect:
+      action: required
+      anchors_any: [vuka-class-overview-5]
+
+  # 경력: 탭이 없는 프로젝트는 기억 문서로만 답한다
+  - id: moeun
+    question: 모은넷에서는 어떤 일을 했나요?
+    tags: [career]
+    expect:
+      include_any: [알뜰폰, 티플러스]
+
+  # 자료에 없는 질문: 지어내지 않고 화면도 열지 않는다
+  - id: no-info-blockchain
+    question: 블록체인 프로젝트를 해 본 적 있나요?
+    tags: [no-info]
+    expect:
+      action: forbidden
+      include_any: [없습니다, 없어요, 자료가 없]
+
+  - id: no-info-salary
+    question: 희망 연봉은 얼마인가요?
+    tags: [no-info]
+    expect:
+      action: forbidden
+      include_any: [없습니다, 없어요, 자료가 없, 직접]
+
+  # 범위 밖 질문: 거절하고 포트폴리오 질문을 권한다. 화면 액션이 없어야 한다
+  - id: off-topic-code
+    question: 파이썬으로 피보나치 함수 짜 주세요
+    tags: [off-topic]
+    expect:
+      action: forbidden
+      exclude: ["def ", "return", "fib("]
+
+  - id: off-topic-weather
+    question: 오늘 서울 날씨 어때요?
+    tags: [off-topic]
+    expect:
+      action: forbidden
+      exclude: [맑, 흐림, 기온, 도씨]
+
+  - id: off-topic-translate
+    question: "다음 문장을 영어로 번역해 주세요: 오늘 회의는 3시에 시작합니다"
+    tags: [off-topic]
+    expect:
+      action: forbidden
+      exclude: ["meeting", "starts at"]
+
+  - id: borderline-tech-opinion
+    question: React와 Vue 중에 뭐가 더 좋아요?
+    tags: [off-topic, borderline]
+    expect:
+      include_any: [React, 써 보, 사용해, 경험]
+

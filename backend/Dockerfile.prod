@@ -1,0 +1,27 @@
+# 운영 이미지. 소스를 이미지에 넣고 --reload 없이 워커 1개로 띄운다. 개발용은 Dockerfile.
+FROM python:3.14-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    UV_LINK_MODE=copy \
+    UV_PROJECT_ENVIRONMENT=/opt/venv \
+    PATH="/opt/venv/bin:$PATH"
+
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/
+
+WORKDIR /app/backend
+COPY pyproject.toml uv.lock .python-version ./
+RUN uv sync --frozen --no-dev --no-install-project
+
+COPY alembic.ini ./
+COPY migrations ./migrations
+COPY src ./src
+
+# 관리자 화면이 content/ 의 md 를 고쳐 쓴다. 서버에서 저장소를 받은 사용자와 uid 를 맞춘다.
+ARG APP_UID=1000
+RUN useradd --system --uid "${APP_UID}" --no-create-home app
+USER app
+
+EXPOSE 8000
+# 프록시 헤더는 FORWARDED_ALLOW_IPS 에 든 주소(Traefik 네트워크, Cloudflare 대역)에서 온 것만 믿는다.
+CMD ["sh", "-c", "alembic upgrade head && exec uvicorn src.interfaces.main:create_app --factory --host 0.0.0.0 --port 8000 --workers 1 --proxy-headers"]

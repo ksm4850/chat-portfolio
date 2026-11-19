@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>STT 테스트</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 760px; margin: 40px auto; padding: 0 16px; color: #222; }
+    h1 { font-size: 22px; margin-bottom: 4px; }
+    .hint { color: #666; font-size: 14px; margin-top: 0; }
+    .controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 20px 0 12px; }
+    select { min-width: 240px; padding: 6px; }
+    button { padding: 8px 16px; font-size: 15px; cursor: pointer; }
+    button:disabled { cursor: default; opacity: .4; }
+    .meter { height: 8px; background: #eee; border-radius: 4px; overflow: hidden; }
+    .meter > div { height: 100%; width: 0; background: #2e9e5b; transition: width 80ms linear; }
+    .status { margin: 10px 0; font-size: 14px; color: #444; display: flex; justify-content: space-between; }
+    .status.error { color: #c0392b; }
+    .transcript { border: 1px solid #ddd; border-radius: 8px; padding: 16px; min-height: 240px; font-size: 18px; line-height: 1.6; }
+    .line time { color: #999; font-size: 12px; margin-right: 8px; font-variant-numeric: tabular-nums; }
+    .interim { color: #aaa; }
+  </style>
+</head>
+<body>
+  <h1>STT 테스트</h1>
+  <p class="hint">마이크 음성을 16kHz PCM 으로 서버(<code>/api/v1/voice/stt</code>)에 보내고 인식 결과를 보여준다. 회색은 중간 결과, 검정은 확정 결과다.</p>
+
+  <div class="controls">
+    <select id="device"><option value="">기본 마이크</option></select>
+    <button id="start">녹음 시작</button>
+    <button id="stop" disabled>정지</button>
+    <button id="clear">지우기</button>
+  </div>
+  <div class="meter"><div id="level"></div></div>
+  <div class="status" id="status-row"><span id="status">대기 중</span><span id="sent"></span></div>
+
+  <div class="transcript"><div id="finals"></div><span class="interim" id="interim"></span></div>
+
+  <script>
+    const WS_PATH = '/api/v1/voice/stt';
+    const BYTES_PER_SECOND = 16000 * 2;
+    const $ = (id) => document.getElementById(id);
+
+    let socket = null;
+    let stream = null;
+    let audioContext = null;
+    let sentBytes = 0;
+    let finished = false;
+
+    function setStatus(text, isError = false) {
+      $('status').textContent = text;
+      $('status-row').classList.toggle('error', isError);
+    }
+
+    function showLevel(peak) {
+      $('level').style.width = `${Math.min(1, Math.sqrt(peak)) * 100}%`;
+    }
+
+    function appendFinal(text) {
+      const line = document.createElement('div');
+      line.className = 'line';
+      const time = document.createElement('time');
+      time.textContent = new Date().toLocaleTimeString('ko-KR', { hour12: false });
+      line.append(time, text);
+      $('finals').append(line);
+    }
+
+    async function listDevices() {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const inputs = devices.filter((device) => device.kind === 'audioinput' && device.deviceId);
+      const select = $('device');
+      const current = select.value;
+      select.replaceChildren(
+        new Option('기본 마이크', ''),
+        ...inputs.map((device, i) => new Option(device.label || `마이크 ${i + 1}`, device.deviceId)),
+      );
+      select.value = inputs.some((device) => device.deviceId === current) ? current : '';
+    }
+
+    function describe(error) {
+      if (error.name === 'NotAllowedError') return '마이크 권한이 거부됐다. 주소창 왼쪽 아이콘에서 마이크를 허용한다.';
+      if (error.name === 'NotFoundError') return '마이크를 찾을 수 없다.';
+      return error.message;
+    }
+
+    function openSocket() {
+      return new Promise((resolve, reject) => {
+        const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
+        const ws = new WebSocket(`${protocol}://${location.host}${WS_PATH}`);
+        ws.binaryType = 'arraybuffer';
+        ws.onopen = () => resolve(ws);
+        ws.onerror = () => reject(new Error('서버 WebSocket 연결에 실패했다. 서버가 켜져 있는지 확인한다.'));
+        ws.onmessage = (event) => handleMessage(JSON.parse(event.data));
+        ws.onclose = onSocketClosed;
+      });
+    }
+
+    function handleMessage(message) {
+      if (message.type === 'transcript') {
+        if (message.isFinal) {
+          appendFinal(message.text);
+          $('interim').textContent = '';
+        } else {
+          $('interim').textContent = message.text;
+        }
+      } else if (message.type === 'error') {
+        finished = true;
+        setStatus(`오류: ${message.message} (${message.code})`, true);
+      } else if (message.type === 'done') {
+        finished = true;
+        setStatus('완료');
+      }
+    }
+
+    function onSocketClosed() {
+      stopAudio();
+      socket = null;
+      $('start').disabled = false;
+      $('stop').disabled = true;
+      if (!finished) setStatus('서버 연결이 끊겼다.', true);
+    }
+
+    function stopAudio() {
+      stream?.getTracks().forEach((track) => track.stop());
+      stream = null;
+      audioContext?.close();
+      audioContext = null;
+      showLevel(0);
+    }
+
+    async function start() {
+      $('start').disabled = true;
+      finished = false;
+      sentBytes = 0;
+      $('sent').textContent = '';
+      try {
+        setStatus('마이크 권한 요청 중…');
+        const deviceId = $('device').value;
+        stream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            deviceId: deviceId ? { exact: deviceId } : undefined,
+            channelCount: 1,
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+          },
+        });
+        // 권한을 받은 뒤에야 장치 이름이 보인다.
+        await listDevices();
+
+        setStatus('서버 연결 중…');
+        socket = await openSocket();
+
+        audioContext = new AudioContext();
+        await audioContext.audioWorklet.addModule('pcm-worklet.js');
+        const source = audioContext.createMediaStreamSource(stream);
+        const worklet = new AudioWorkletNode(audioContext, 'pcm-worklet');
+        worklet.port.onmessage = ({ data }) => {
+          showLevel(data.peak);
+          if (socket?.readyState !== WebSocket.OPEN) return;
+          socket.send(data.pcm);
+          sentBytes += data.pcm.byteLength;
+          $('sent').textContent = `보낸 오디오 ${(sentBytes / BYTES_PER_SECOND).toFixed(1)}초`;
+        };
+        // destination 에 연결해야 worklet 이 돈다. 출력은 무음이라 소리가 되돌아 나오지 않는다.
+        source.connect(worklet).connect(audioContext.destination);
+
+        setStatus(`인식 중 (입력 ${audioContext.sampleRate}Hz → 16000Hz)`);
+        $('stop').disabled = false;
+      } catch (error) {
+        finished = true;
+        stopAudio();
+        socket?.close();
+        setStatus(`시작 실패: ${describe(error)}`, true);
+        $('start').disabled = false;
+      }
+    }
+
+    function stop() {
+      $('stop').disabled = true;
+      stopAudio();
+      if (socket?.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({ type: 'stop' }));
+        setStatus('남은 결과 받는 중…');
+      }
+    }
+
+    $('start').onclick = start;
+    $('stop').onclick = stop;
+    $('clear').onclick = () => {
+      $('finals').replaceChildren();
+      $('interim').textContent = '';
+    };
+    listDevices();
+  </script>
+</body>
+</html>

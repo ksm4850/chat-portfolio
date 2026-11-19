@@ -1,0 +1,386 @@
+{
+  "profile": {
+    "name": "김상명",
+    "headline": "백엔드 개발자",
+    "role": "Backend · Infra Engineer"
+  },
+  "careers": [
+    {
+      "company": "플레이아이디어랩",
+      "period": "2025.08 ~ 2026.10",
+      "description": "\"누구나 편하게 AI를 도입하기 위해\"",
+      "roles": [
+        "Backend",
+        "Infra"
+      ],
+      "projectIds": [
+        "phenotype",
+        "labeling",
+        "cq",
+        "ecs"
+      ]
+    },
+    {
+      "company": "한국미용데이터",
+      "period": "2023.02 ~ 2024.05",
+      "description": "미용관련 CRM, 자사몰, 미용강의 서비스 플랫폼",
+      "roles": [
+        "Backend",
+        "Frontend",
+        "Infra"
+      ],
+      "projectIds": [
+        "vuka-app-api",
+        "vuka-class",
+        "vuka-self-checkin",
+        "vuka-mobile-receipt"
+      ]
+    },
+    {
+      "company": "모은넷",
+      "period": "2022.04 ~ 2023.01",
+      "description": "MVNO 알뜰폰 통신 솔루션 개발",
+      "roles": [
+        "Backend",
+        "Frontend"
+      ],
+      "projectIds": [
+        "moeun-mvno",
+        "moeun-tplus"
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "id": "phenotype",
+      "company": "플레이아이디어랩",
+      "title": "디지털 피노타이핑 연구 플랫폼 개발",
+      "period": "2026.09 ~ 2026.10",
+      "summary": "참가자 스마트폰 센서·이벤트와 웨어러블(Google Health) 데이터를 수집하고 연구자가 연구·참여자·설문·자료를 관리하는 플랫폼. 백엔드 전담, 어드민 프론트 일부·배포 담당",
+      "stacks": [
+        "Python",
+        "FastAPI",
+        "PostgreSQL",
+        "TimescaleDB",
+        "Keycloak",
+        "Google Health API",
+        "React",
+        "Docker",
+        "Claude Code"
+      ],
+      "tabs": [
+        {
+          "id": "overview",
+          "label": "개요",
+          "file": "phenotype-overview.md"
+        },
+        {
+          "id": "architecture",
+          "label": "아키텍처",
+          "file": "phenotype-architecture.md"
+        },
+        {
+          "id": "decisions",
+          "label": "기술적 고민",
+          "file": "phenotype-decisions.md"
+        },
+        {
+          "id": "frontend",
+          "label": "프론트엔드·운영",
+          "file": "phenotype-frontend.md"
+        }
+      ],
+      "notes": [
+        "phenotype-best.md"
+      ],
+      "media": [
+        "medias/play/phenotype-timeline.png",
+        "medias/play/phenotype-study.png",
+        "medias/play/phenotype-export.png",
+        "medias/play/phenotype-ema-responses.png",
+        "medias/play/phenotype-survey.png",
+        "medias/play/phenotype-qr.png"
+      ]
+    },
+    {
+      "id": "labeling",
+      "company": "플레이아이디어랩",
+      "title": "이미지 라벨링 서비스 개발",
+      "period": "2025.08 ~ 퇴사",
+      "summary": "2D/3D 라벨링 툴 및 모델 생성 서비스 및 온프레미스 환경 구축. 메모리 뱅크 기반 자동 라벨링의 BE 연동·캐싱 레이어·배포 담당",
+      "stacks": [
+        "Python",
+        "FastAPI",
+        "PostgreSQL",
+        "Celery",
+        "RabbitMQ",
+        "Redis",
+        "MinIO",
+        "Docker"
+      ],
+      "url": "https://slam.pilab.co.kr",
+      "tabs": [
+        {
+          "id": "overview",
+          "label": "개요",
+          "file": "slam-labeling.md"
+        },
+        {
+          "id": "features",
+          "label": "기능 개발",
+          "file": "slam-features.md"
+        },
+        {
+          "id": "memory-bank",
+          "label": "메모리 뱅크 기반 자동 라벨링",
+          "file": "slam-memory-learning.md"
+        }
+      ],
+      "media": []
+    },
+    {
+      "id": "cq",
+      "company": "플레이아이디어랩",
+      "title": "ML 실험 자동화 플랫폼 개발",
+      "period": "2026.05 ~ 2026.07",
+      "summary": "로컬 GPU를 워커로 등록해 AI 에이전트가 실험을 설계·실행·추적하는 ML 실험 자동화 플랫폼. 웹 프론트를 제외한 백엔드·인프라 전반 담당",
+      "stacks": [
+        "Go",
+        "TypeScript",
+        "NATS",
+        "Redis",
+        "Supabase",
+        "MCP",
+        "Claude Code"
+      ],
+      "url": "http://cq.pilab.co.kr",
+      "tabs": [
+        {
+          "id": "overview",
+          "label": "개요",
+          "file": "cq-overview.md"
+        },
+        {
+          "id": "architecture",
+          "label": "아키텍처",
+          "file": "cq-architecture.md"
+        },
+        {
+          "id": "decisions",
+          "label": "기술적 고민",
+          "file": "cq-decisions.md"
+        },
+        {
+          "id": "retro",
+          "label": "회고",
+          "file": "cq-retro.md"
+        }
+      ],
+      "media": [
+        "medias/play/cq-project.png",
+        "medias/play/cq-worker.png",
+        "medias/play/cq-drive.png",
+        "medias/play/cq-graph.png"
+      ]
+    },
+    {
+      "id": "ecs",
+      "company": "플레이아이디어랩",
+      "title": "AWS 인프라 구축·운영 및 ECS 전환",
+      "period": "2026.01 ~ 퇴사",
+      "summary": "NCP 개별 서버 운영 → Docker Swarm 통합(비용 최적화) → AWS ECS 전환(운영 편의성·안정성)으로 단계적 개선. ECS·RDS·S3·CloudFront·Route53 운영, IaC(OpenTofu) 도입 및 배포 자동화",
+      "stacks": [
+        "AWS",
+        "ECS",
+        "Docker Swarm",
+        "Traefik",
+        "Terraform (OpenTofu)",
+        "CloudWatch",
+        "Claude Code"
+      ],
+      "tabs": [
+        {
+          "id": "overview",
+          "label": "개요",
+          "file": "ecs-migration.md"
+        }
+      ],
+      "media": []
+    },
+    {
+      "id": "vuka-app-api",
+      "company": "한국미용데이터",
+      "title": "앱 API 개발 및 유지보수",
+      "period": "2023.02 ~ 퇴사",
+      "summary": "CRM, 미용마켓, 클래스를 제공하는 자사 앱의 API 개발. Classic ASP 레거시를 FastAPI로 마이그레이션하고 본인인증 기반 계정 통합, 소셜 로그인, 간편결제를 개발",
+      "stacks": [
+        "Python",
+        "FastAPI",
+        "MSSQL",
+        "PostgreSQL",
+        "AWS"
+      ],
+      "url": "https://pro.vuka.co.kr",
+      "tabs": [
+        {
+          "id": "overview",
+          "label": "개요",
+          "file": "vuka-app-api.md"
+        }
+      ],
+      "media": [
+        "medias/kbd/app1.jpg",
+        "medias/kbd/app2.jpg",
+        "medias/kbd/app3.jpg",
+        "medias/kbd/app4.jpg"
+      ]
+    },
+    {
+      "id": "vuka-class",
+      "company": "한국미용데이터",
+      "title": "미용 인터넷 강의",
+      "period": "2023.10 ~ 퇴사",
+      "summary": "앱 내 미용 인터넷 강의 플랫폼. 앱을 제외한 백엔드·관리자 페이지를 초기 설계부터 개발, 배포까지 단독 담당",
+      "stacks": [
+        "Python",
+        "FastAPI",
+        "Svelte",
+        "인앱결제",
+        "Vimeo"
+      ],
+      "tabs": [
+        {
+          "id": "overview",
+          "label": "개요",
+          "file": "vuka-class.md"
+        }
+      ],
+      "media": [
+        "medias/kbd/class1.jpg",
+        "medias/kbd/class2.jpg",
+        "medias/kbd/class3.jpg",
+        "medias/kbd/class4.jpg",
+        "medias/kbd/class5.png",
+        "medias/kbd/class6.png",
+        "medias/kbd/class7.png"
+      ]
+    },
+    {
+      "id": "vuka-self-checkin",
+      "company": "한국미용데이터",
+      "title": "셀프체크인",
+      "period": "2023.06 ~ 2023.07",
+      "summary": "1인 미용 매장을 위한 태블릿 전용 셀프체크인 앱. 웹 프론트와 API 개발",
+      "stacks": [
+        "Python",
+        "FastAPI",
+        "Classic ASP",
+        "jQuery",
+        "MSSQL"
+      ],
+      "tabs": [
+        {
+          "id": "overview",
+          "label": "개요",
+          "file": "vuka-self-checkin.md"
+        }
+      ],
+      "media": [
+        "medias/kbd/self1.jpg",
+        "medias/kbd/self2.jpg",
+        "medias/kbd/self3.jpg",
+        "medias/kbd/self4.jpg",
+        "medias/kbd/self5.jpg",
+        "medias/kbd/self6.jpg",
+        "medias/kbd/self7.jpg"
+      ]
+    },
+    {
+      "id": "vuka-mobile-receipt",
+      "company": "한국미용데이터",
+      "title": "모바일영수증",
+      "period": "2023.06 ~ 2023.07",
+      "summary": "매장 결제 완료 시 고객에게 모바일영수증 알림톡을 발송하는 기능. 단독 개발",
+      "stacks": [
+        "Python",
+        "FastAPI",
+        "Jinja2",
+        "MSSQL",
+        "PostgreSQL"
+      ],
+      "tabs": [
+        {
+          "id": "overview",
+          "label": "개요",
+          "file": "vuka-mobile-receipt.md"
+        }
+      ],
+      "media": [
+        "medias/kbd/receipt1.jpg",
+        "medias/kbd/receipt2.jpg",
+        "medias/kbd/receipt3.png"
+      ]
+    },
+    {
+      "id": "moeun-mvno",
+      "company": "모은넷",
+      "title": "알뜰폰 솔루션 유지보수 및 개발",
+      "period": "2022.04 ~ 퇴사",
+      "summary": "",
+      "stacks": [
+        "ASP.NET",
+        "MSSQL"
+      ],
+      "tabs": [],
+      "media": []
+    },
+    {
+      "id": "moeun-tplus",
+      "company": "모은넷",
+      "title": "티플러스 고객센터 앱 개발",
+      "period": "2022.09 ~ 퇴사",
+      "summary": "고객사 알뜰폰 고객센터 앱 개발",
+      "stacks": [],
+      "tabs": [],
+      "media": []
+    }
+  ],
+  "skills": [
+    {
+      "category": "Backend",
+      "items": [
+        "Python",
+        "FastAPI",
+        "PostgreSQL",
+        "Supabase",
+        "Redis",
+        "RabbitMQ"
+      ]
+    },
+    {
+      "category": "DevOps / Infra",
+      "items": [
+        "Docker",
+        "AWS",
+        "NCP",
+        "MinIO",
+        "Terraform",
+        "Nginx",
+        "Traefik",
+        "GitHub",
+        "GitLab",
+        "Sentry",
+        "Linux"
+      ]
+    },
+    {
+      "category": "Frontend",
+      "items": [
+        "TypeScript",
+        "Svelte",
+        "React",
+        "Vite"
+      ]
+    }
+  ]
+}

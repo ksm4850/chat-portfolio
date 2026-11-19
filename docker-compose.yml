@@ -1,0 +1,83 @@
+name: portfolio
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    container_name: portfolio-postgres
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: changeme
+      POSTGRES_DB: app
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d app"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: portfolio-redis
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    container_name: portfolio-backend
+    env_file: ./backend/.env.local
+    environment:
+      DATABASE_URL: postgresql+asyncpg://app:changeme@postgres:5432/app
+      REDIS_URL: redis://redis:6379/0
+      
+    volumes:
+      - ./backend:/app/backend
+      # 관리자 화면에서 포트폴리오 md 를 고치면 백엔드가 원본에 쓴다.
+      - ./content:/app/content
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    container_name: portfolio-frontend
+    environment:
+      API_PROXY_TARGET: http://backend:8000
+    volumes:
+      - ./frontend:/app/frontend
+      - /app/frontend/node_modules
+      - ./contracts:/app/contracts:ro
+      - ./content:/app/content:ro
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+  admin:
+    build: ./admin
+    container_name: portfolio-admin
+    environment:
+      API_PROXY_TARGET: http://backend:8000
+    volumes:
+      - ./admin:/app/admin
+      - /app/admin/node_modules
+    ports:
+      - "5175:5175"
+    depends_on:
+      - backend
+
+volumes:
+  postgres-data:
+    # 이전 프로젝트명(voice-clone-chat)으로 만든 볼륨을 그대로 쓴다.
+    name: voice-clone-chat_postgres-data

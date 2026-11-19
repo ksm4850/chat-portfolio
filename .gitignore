@@ -1,0 +1,25 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+.env.*
+!.env.example
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+backend/data/*
+!backend/data/*.example.md
+node_modules/
+dist/
+
+# DeepEval 실행 결과와 캐시
+backend/tests/eval/results/
+backend/.deepeval/
+
+# IDE
+.idea/
+
+# 운영 TLS 인증서
+deploy/certs/*
+!deploy/certs/README.md

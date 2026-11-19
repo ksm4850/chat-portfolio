@@ -1,0 +1,171 @@
+# 운영 구성. 저장소 루트에서 실행한다:
+#   docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build
+# 비밀값: deploy/.env(SITE_HOST, ADMIN_HOST, POSTGRES_PASSWORD, VITE_GA_ID, APP_UID), backend/.env.prod(앱 설정). 절차는 docs/deploy.md.
+# 1GB 서버 기준으로 서비스마다 메모리 상한을 둔다. 합계 약 870MB 라 swap 을 함께 켠다.
+name: portfolio-prod
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  traefik:
+    image: traefik:v3.6
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./traefik/dynamic.yml:/etc/traefik/dynamic.yml:ro
+      - ./certs:/certs:ro
+    networks:
+      - edge
+    mem_limit: 96m
+    logging: *logging
+
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile.prod
+      args:
+        # 서버에서 저장소를 받은 사용자의 uid(id -u). 관리자 화면이 content/ 에 md 를 쓴다.
+        APP_UID: ${APP_UID:-1000}
+    restart: unless-stopped
+    env_file: ../backend/.env.prod
+    environment:
+      # 설정은 위 env_file 로만 받는다(이미지 안에는 env 파일이 없다).
+      ENV_FILE: ""
+      DATABASE_URL: postgresql+asyncpg://app:${POSTGRES_PASSWORD:?deploy/.env 에 POSTGRES_PASSWORD}@postgres:5432/app
+      REDIS_URL: redis://redis:6379/0
+      # 프록시 헤더를 믿을 주소: Traefik 이 있는 edge 네트워크와 Cloudflare 대역(traefik.yml 과 같은 목록).
+      FORWARDED_ALLOW_IPS: "172.30.0.0/24,173.245.48.0/20,103.21.244.0/22,103.22.200.0/22,103.31.4.0/22,141.101.64.0/18,108.162.192.0/18,190.93.240.0/20,188.114.96.0/20,197.234.240.0/22,198.41.128.0/17,162.158.0.0/15,104.16.0.0/13,104.24.0.0/14,172.64.0.0/13,131.0.72.0/22,2400:cb00::/32,2606:4700::/32,2803:f800::/32,2405:b500::/32,2405:8100::/32,2a06:98c0::/29,2c0f:f248::/32"
+    volumes:
+      # 관리자 화면이 md 를 고치면 여기에 쓴다. 서버 저장소의 content/ 를 그대로 쓴다.
+      - ../content:/app/content
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - edge
+      - internal
+    mem_limit: 384m
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    labels:
+      - traefik.enable=true
+      # 방문자 호스트에는 방문자 화면이 쓰는 API 만 연다. 관리자·로그인 API 는 관리자 호스트에서만
+      # (Cloudflare Access 를 우회하지 못하게). 새 공개 API 를 만들면 여기에 더한다.
+      - traefik.http.routers.api.rule=Host(`${SITE_HOST}`) && (PathPrefix(`/api/v1/agui`) || PathPrefix(`/api/v1/portfolio`) || PathPrefix(`/api/v1/visitors`))
+      - traefik.http.routers.api.entrypoints=websecure
+      - traefik.http.routers.api.service=api
+      - traefik.http.routers.api-admin.rule=Host(`${ADMIN_HOST}`) && PathPrefix(`/api`)
+      - traefik.http.routers.api-admin.entrypoints=websecure
+      - traefik.http.routers.api-admin.service=api
+      - traefik.http.services.api.loadbalancer.server.port=8000
+    logging: *logging
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: deploy/web.Dockerfile
+      target: frontend
+      args:
+        VITE_GA_ID: ${VITE_GA_ID:-}
+    restart: unless-stopped
+    networks:
+      - edge
+    mem_limit: 32m
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.web.rule=Host(`${SITE_HOST:?deploy/.env 에 SITE_HOST}`)
+      - traefik.http.routers.web.entrypoints=websecure
+      - traefik.http.services.web.loadbalancer.server.port=80
+    logging: *logging
+
+  admin:
+    build:
+      context: ..
+      dockerfile: deploy/web.Dockerfile
+      target: admin
+    restart: unless-stopped
+    networks:
+      - edge
+    mem_limit: 32m
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.admin.rule=Host(`${ADMIN_HOST:?deploy/.env 에 ADMIN_HOST}`)
+      - traefik.http.routers.admin.entrypoints=websecure
+      - traefik.http.services.admin.loadbalancer.server.port=80
+    logging: *logging
+
+  postgres:
+    image: pgvector/pgvector:pg17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_DB: app
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?deploy/.env 에 POSTGRES_PASSWORD}
+    # 1GB 서버에 맞춘 작은 설정
+    command:
+      - postgres
+      - -c
+      - shared_buffers=64MB
+      - -c
+      - effective_cache_size=192MB
+      - -c
+      - work_mem=4MB
+      - -c
+      - maintenance_work_mem=32MB
+      - -c
+      - max_connections=20
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - internal
+    mem_limit: 256m
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d app"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    logging: *logging
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    # 키는 모두 TTL 이 있어 메모리가 차면 TTL 있는 키부터 지운다. 사용량 카운터를 위해 RDB 스냅샷은 남긴다.
+    command: ["redis-server", "--maxmemory", "48mb", "--maxmemory-policy", "volatile-lru", "--save", "300", "10", "--appendonly", "no"]
+    volumes:
+      - redis-data:/data
+    networks:
+      - internal
+    mem_limit: 64m
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    logging: *logging
+
+networks:
+  edge:
+    name: portfolio-edge
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24
+  internal:
+    internal: true
+
+volumes:
+  postgres-data:
+  redis-data:

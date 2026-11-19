@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>캐릭터 관리</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; color: #222; background: #f6f7f9; font-size: 14px; }
+    button { padding: 6px 12px; border: 1px solid #ccc; border-radius: 6px; background: #fff; cursor: pointer; font-size: 14px; }
+    button.primary { background: #2f6fed; border-color: #2f6fed; color: #fff; }
+    button.danger { color: #c0392b; border-color: #e5b5ae; }
+    button:disabled { opacity: .5; cursor: default; }
+    input, textarea, select { width: 100%; padding: 7px 9px; border: 1px solid #ccc; border-radius: 6px; font: inherit; }
+    textarea { resize: vertical; }
+    label { display: block; font-weight: 600; margin: 12px 0 4px; }
+    .hint { color: #777; font-size: 12px; font-weight: 400; }
+    .hidden { display: none !important; }
+    .error { color: #c0392b; margin-top: 8px; white-space: pre-wrap; }
+    .ok { color: #2e9e5b; margin-top: 8px; }
+    .card { background: #fff; border: 1px solid #e3e5e8; border-radius: 10px; padding: 16px; }
+
+    #login { max-width: 360px; margin: 120px auto; }
+    #app { display: grid; grid-template-columns: 240px 1fr; grid-template-rows: 52px 1fr; height: 100vh; }
+    header { grid-column: 1 / 3; display: flex; align-items: center; gap: 16px; padding: 0 16px; background: #fff; border-bottom: 1px solid #e3e5e8; }
+    header h1 { font-size: 16px; margin: 0; flex: 1; }
+    aside { border-right: 1px solid #e3e5e8; background: #fff; padding: 12px; overflow-y: auto; }
+    aside .item { padding: 8px 10px; border-radius: 6px; cursor: pointer; display: flex; justify-content: space-between; gap: 6px; }
+    aside .item:hover { background: #f0f2f5; }
+    aside .item.active { background: #e7efff; }
+    .badge { font-size: 11px; padding: 1px 6px; border-radius: 10px; background: #eee; color: #666; white-space: nowrap; }
+    .badge.public { background: #e3f6ea; color: #2e9e5b; }
+    main { overflow-y: auto; padding: 20px; }
+    .tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 1px solid #e3e5e8; }
+    .tabs button { border: none; border-radius: 6px 6px 0 0; background: none; padding: 8px 14px; }
+    .tabs button.active { background: #fff; border: 1px solid #e3e5e8; border-bottom-color: #fff; margin-bottom: -1px; font-weight: 600; }
+    .row { display: flex; gap: 8px; align-items: center; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .dialogue { display: grid; grid-template-columns: 1fr 1fr auto; gap: 6px; margin-bottom: 6px; }
+    table { width: 100%; border-collapse: collapse; }
+    td, th { text-align: left; padding: 8px; border-bottom: 1px solid #eee; vertical-align: top; }
+    .hit { border: 1px solid #eee; border-radius: 8px; padding: 10px; margin-top: 8px; white-space: pre-wrap; }
+    .score { font-size: 12px; color: #2f6fed; font-weight: 600; }
+
+    #chat-log { height: 52vh; overflow-y: auto; background: #fafbfc; border: 1px solid #e3e5e8; border-radius: 8px; padding: 12px; }
+    .bubble { max-width: 75%; padding: 8px 12px; border-radius: 12px; margin: 6px 0; white-space: pre-wrap; line-height: 1.5; }
+    .bubble.user { background: #2f6fed; color: #fff; margin-left: auto; }
+    .bubble.assistant { background: #fff; border: 1px solid #e3e5e8; }
+    .bubble.system { background: none; color: #888; font-size: 12px; text-align: center; max-width: 100%; }
+    details.context { margin: 4px 0 8px; font-size: 12px; color: #555; }
+    details.context pre { white-space: pre-wrap; background: #fff; border: 1px solid #eee; padding: 8px; border-radius: 6px; }
+    .meta { font-size: 11px; color: #999; }
+  </style>
+</head>
+<body>
+  <div id="login" class="card">
+    <h2 style="margin-top:0">관리자 로그인</h2>
+    <form id="login-form">
+      <label>이메일</label><input name="username" type="email" autocomplete="username" required>
+      <label>비밀번호</label><input name="password" type="password" autocomplete="current-password" required>
+      <button class="primary" style="margin-top:16px;width:100%">로그인</button>
+      <div class="error" id="login-error"></div>
+    </form>
+  </div>
+
+  <div id="app" class="hidden">
+    <header>
+      <h1>캐릭터 관리</h1>
+      <span id="usage" class="meta"></span>
+      <span id="me" class="meta"></span>
+      <button id="logout">로그아웃</button>
+    </header>
+    <aside>
+      <button class="primary" id="new-character" style="width:100%;margin-bottom:10px">+ 새 캐릭터</button>
+      <div id="character-list"></div>
+    </aside>
+    <main>
+      <div id="empty" class="meta">왼쪽에서 캐릭터를 고르거나 새로 만드세요.</div>
+      <div id="workspace" class="hidden">
+        <div class="tabs" id="tabs">
+          <button data-tab="settings" class="active">설정</button>
+          <button data-tab="documents">기억</button>
+          <button data-tab="search">검색 테스트</button>
+          <button data-tab="chat">채팅 테스트</button>
+        </div>
+
+        <section id="tab-settings" class="card">
+          <form id="character-form">
+            <div class="grid2">
+              <div><label>이름</label><input name="name" maxlength="50" required></div>
+              <div><label>slug <span class="hint">방문자 URL용. 소문자·숫자·하이픈</span></label>
+                <input name="slug" pattern="[a-z0-9][a-z0-9\-]{0,49}" required></div>
+            </div>
+            <label>첫 인사말 <span class="hint">위젯을 열면 처음 보이는 말</span></label>
+            <input name="greeting" maxlength="500">
+            <label>소개 <span class="hint">나는 누구인가. 자세한 사실은 '기억'에 넣는다</span></label>
+            <textarea name="profile" rows="6" maxlength="4000" required></textarea>
+            <label>말투 <span class="hint">존댓말/반말, 문장 길이, 말버릇</span></label>
+            <textarea name="speakingStyle" rows="4" maxlength="2000"></textarea>
+            <label>예시 대화 <span class="hint">말투를 보여 주는 주고받기 (최대 20개)</span></label>
+            <div id="dialogues"></div>
+            <button type="button" id="add-dialogue">+ 예시 추가</button>
+            <label class="row" style="font-weight:400"><input type="checkbox" name="isPublic" style="width:auto"> 방문자에게 공개</label>
+            <div class="row" style="margin-top:16px">
+              <button class="primary" type="submit">저장</button>
+              <button class="danger" type="button" id="delete-character">삭제</button>
+            </div>
+            <div id="character-message"></div>
+          </form>
+        </section>
+
+        <section id="tab-documents" class="card hidden">
+          <form id="document-form">
+            <div class="grid2">
+              <div><label>제목</label><input name="title" maxlength="200" required></div>
+              <div><label>출처 <span class="hint">예: profile, kakao, note</span></label><input name="source" value="profile" maxlength="50" required></div>
+            </div>
+            <label>내용 <span class="hint">Q&amp;A 는 빈 줄로 구분하면 한 쌍씩 청크가 된다</span></label>
+            <textarea name="content" rows="8" required placeholder="Q: 고향은?&#10;A: 부산이에요.&#10;&#10;Q: 직업은?&#10;A: 백엔드 개발자예요."></textarea>
+            <button class="primary" style="margin-top:10px">적재</button>
+            <div id="document-message"></div>
+          </form>
+          <h3>적재된 문서</h3>
+          <table><thead><tr><th>제목</th><th>출처</th><th>적재 시각</th><th></th></tr></thead><tbody id="document-rows"></tbody></table>
+        </section>
+
+        <section id="tab-search" class="card hidden">
+          <form id="search-form" class="row">
+            <input name="query" placeholder="방문자가 할 법한 질문" required>
+            <select name="limit" style="width:90px"><option>3</option><option selected>4</option><option>8</option></select>
+            <button class="primary" style="white-space:nowrap">검색</button>
+          </form>
+          <div id="search-results"></div>
+        </section>
+
+        <section id="tab-chat" class="card hidden">
+          <div class="row" style="margin-bottom:10px">
+            <span class="meta" style="flex:1">비공개여도 대화할 수 있고 사용량 제한에 잡히지 않는다. 답마다 검색된 기억과 시스템 프롬프트를 펼쳐 볼 수 있다.</span>
+            <button id="chat-reset">새 대화</button>
+          </div>
+          <div id="chat-log"></div>
+          <form id="chat-form" class="row" style="margin-top:10px">
+            <input name="text" placeholder="메시지" maxlength="2000" autocomplete="off" required>
+            <button class="primary" style="white-space:nowrap">보내기</button>
+          </form>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const API = '/api/v1';
+    const $ = (id) => document.getElementById(id);
+    let token = sessionStorage.getItem('adminToken');
+    let characters = [];
+    let current = null;
+    let chatSessionId = null;
+
+    function el(tag, props = {}, ...children) {
+      const node = Object.assign(document.createElement(tag), props);
+      node.append(...children);
+      return node;
+    }
+
+    async function api(path, { method = 'GET', body } = {}) {
+      const response = await fetch(API + path, {
+        method,
+        headers: { Authorization: `Bearer ${token}`, ...(body ? { 'Content-Type': 'application/json' } : {}) },
+        body: body ? JSON.stringify(body) : undefined,
+      });
+      if (response.status === 401) { logout(); throw new Error('로그인이 만료됐다.'); }
+      if (!response.ok) throw new Error(await errorMessage(response));
+      return response.status === 204 ? null : response.json();
+    }
+
+    async function errorMessage(response) {
+      const body = await response.json().catch(() => null);
+      const error = body?.error;
+      if (!error) return `${response.status} ${response.statusText}`;
+      const details = (error.details || []).map((d) => `- ${(d.loc || []).join('.')}: ${d.msg}`).join('\n');
+      return `${error.message} (${error.code})${details ? '\n' + details : ''}`;
+    }
+
+    function show(target, text, ok = false) {
+      target.className = ok ? 'ok' : 'error';
+      target.textContent = text;
+    }
+
+    // ---------- 로그인 ----------
+    $('login-form').onsubmit = async (event) => {
+      event.preventDefault();
+      const form = new FormData(event.target);
+      const response = await fetch(`${API}/auth/login`, { method: 'POST', body: new URLSearchParams(form) });
+      if (!response.ok) return show($('login-error'), await errorMessage(response));
+      token = (await response.json()).access_token;
+      sessionStorage.setItem('adminToken', token);
+      start();
+    };
+
+    function logout() {
+      token = null;
+      sessionStorage.removeItem('adminToken');
+      $('app').classList.add('hidden');
+      $('login').classList.remove('hidden');
+    }
+    $('logout').onclick = logout;
+
+    async function start() {
+      try {
+        const me = await api('/users/me');
+        if (!me.isSuperuser) { logout(); return show($('login-error'), '관리자 계정이 아니다.'); }
+        $('me').textContent = me.email;
+        $('login').classList.add('hidden');
+        $('app').classList.remove('hidden');
+        await Promise.all([loadCharacters(), loadUsage()]);
+      } catch (error) {
+        show($('login-error'), error.message);
+      }
+    }
+
+    async function loadUsage() {
+      const usage = await api('/admin/usage');
+      $('usage').textContent = `오늘 방문자 LLM 호출 ${usage.llmCallsToday} / ${usage.llmCallsPerDay}`;
+    }
+
+    // ---------- 캐릭터 ----------
+    async function loadCharacters(selectId) {
+      characters = await api('/admin/characters');
+      $('character-list').replaceChildren(...characters.map((c) => el('div', {
+        className: 'item' + (c.id === (selectId ?? current?.id) ? ' active' : ''),
+        onclick: () => selectCharacter(c.id),
+      }, el('span', { textContent: c.name }), el('span', {
+        className: 'badge' + (c.isPublic ? ' public' : ''), textContent: c.isPublic ? '공개' : '비공개',
+      }))));
+      if (selectId) selectCharacter(selectId);
+    }
+
+    function selectCharacter(id) {
+      isCreating = false;
+      current = characters.find((c) => c.id === id) ?? null;
+      chatSessionId = null;
+      $('chat-log').replaceChildren();
+      $('search-results').replaceChildren();
+      $('empty').classList.toggle('hidden', !!current);
+      $('workspace').classList.toggle('hidden', !current);
+      document.querySelectorAll('#character-list .item').forEach((node, i) =>
+        node.classList.toggle('active', characters[i]?.id === id));
+      fillForm(current);
+      setTabsEnabled(!!current);
+      openTab('settings');
+    }
+
+    let isCreating = false;
+    $('new-character').onclick = () => {
+      isCreating = true;
+      current = null;
+      document.querySelectorAll('#character-list .item').forEach((n) => n.classList.remove('active'));
+      $('empty').classList.add('hidden');
+      $('workspace').classList.remove('hidden');
+      fillForm(null);
+      setTabsEnabled(false);
+      openTab('settings');
+    };
+
+    function fillForm(character) {
+      const form = $('character-form');
+      for (const name of ['name', 'slug', 'greeting', 'profile', 'speakingStyle']) {
+        form.elements[name].value = character?.[name] ?? '';
+      }
+      form.elements.isPublic.checked = character?.isPublic ?? false;
+      $('dialogues').replaceChildren();
+      (character?.exampleDialogues ?? []).forEach(addDialogue);
+      $('delete-character').classList.toggle('hidden', !character);
+      $('character-message').textContent = '';
+    }
+
+    function addDialogue(dialogue = { user: '', assistant: '' }) {
+      const row = el('div', { className: 'dialogue' },
+        el('input', { placeholder: '상대', value: dialogue.user, maxLength: 500 }),
+        el('input', { placeholder: '나', value: dialogue.assistant, maxLength: 500 }),
+        el('button', { type: 'button', textContent: '삭제', onclick: () => row.remove() }));
+      $('dialogues').append(row);
+    }
+    $('add-dialogue').onclick = () => addDialogue();
+
+    $('character-form').onsubmit = async (event) => {
+      event.preventDefault();
+      const form = event.target;
+      const body = {
+        name: form.elements.name.value.trim(),
+        slug: form.elements.slug.value.trim(),
+        greeting: form.elements.greeting.value.trim(),
+        profile: form.elements.profile.value.trim(),
+        speakingStyle: form.elements.speakingStyle.value.trim(),
+        isPublic: form.elements.isPublic.checked,
+        exampleDialogues: [...$('dialogues').children]
+          .map((row) => ({ user: row.children[0].value.trim(), assistant: row.children[1].value.trim() }))
+          .filter((d) => d.user && d.assistant),
+      };
+      try {
+        const saved = current
+          ? await api(`/admin/characters/${current.id}`, { method: 'PATCH', body })
+          : await api('/admin/characters', { method: 'POST', body });
+        isCreating = false;
+        await loadCharacters(saved.id);
+        show($('character-message'), '저장했다.', true);
+      } catch (error) {
+        show($('character-message'), error.message);
+      }
+    };
+
+    $('delete-character').onclick = async () => {
+      if (!current || !confirm(`'${current.name}' 캐릭터와 기억을 모두 지울까요?`)) return;
+      await api(`/admin/characters/${current.id}`, { method: 'DELETE' });
+      current = null;
+      $('workspace').classList.add('hidden');
+      $('empty').classList.remove('hidden');
+      await loadCharacters();
+    };
+
+    // ---------- 탭 ----------
+    function setTabsEnabled(enabled) {
+      document.querySelectorAll('#tabs button').forEach((b) => { if (b.dataset.tab !== 'settings') b.disabled = !enabled; });
+    }
+
+    function openTab(name) {
+      document.querySelectorAll('#tabs button').forEach((b) => b.classList.toggle('active', b.dataset.tab === name));
+      for (const tab of ['settings', 'documents', 'search', 'chat']) $(`tab-${tab}`).classList.toggle('hidden', tab !== name);
+      if (name === 'documents') loadDocuments();
+    }
+    document.querySelectorAll('#tabs button').forEach((b) => { b.onclick = () => openTab(b.dataset.tab); });
+
+    // ---------- 기억 ----------
+    async function loadDocuments() {
+      const documents = await api(`/admin/characters/${current.id}/documents`);
+      $('document-rows').replaceChildren(...documents.map((d) => el('tr', {},
+        el('td', { textContent: d.title }),
+        el('td', { textContent: d.source }),
+        el('td', { textContent: new Date(d.createdAt).toLocaleString('ko-KR') }),
+        el('td', {}, el('button', { className: 'danger', textContent: '삭제', onclick: async () => {
+          if (!confirm(`'${d.title}' 문서를 지울까요?`)) return;
+          await api(`/admin/characters/${current.id}/documents/${d.id}`, { method: 'DELETE' });
+          loadDocuments();
+        } })))));
+      if (!documents.length) $('document-rows').append(el('tr', {}, el('td', { colSpan: 4, className: 'meta', textContent: '아직 기억이 없다.' })));
+    }
+
+    $('document-form').onsubmit = async (event) => {
+      event.preventDefault();
+      const form = event.target;
+      const button = form.querySelector('button');
+      button.disabled = true;
+      show($('document-message'), '임베딩 중…', true);
+      try {
+        const created = await api(`/admin/characters/${current.id}/documents`, { method: 'POST', body: {
+          title: form.elements.title.value.trim(),
+          source: form.elements.source.value.trim(),
+          content: form.elements.content.value,
+        } });
+        show($('document-message'), `적재했다. 청크 ${created.chunkCount}개`, true);
+        form.elements.title.value = '';
+        form.elements.content.value = '';
+        loadDocuments();
+      } catch (error) {
+        show($('document-message'), error.message);
+      } finally {
+        button.disabled = false;
+      }
+    };
+
+    // ---------- 검색 ----------
+    function renderHits(hits) {
+      if (!hits.length) return [el('div', { className: 'meta', textContent: '걸린 기억이 없다.' })];
+      return hits.map((h) => el('div', { className: 'hit' },
+        el('div', { className: 'score', textContent: `유사도 ${h.score.toFixed(3)} · ${h.title}` }),
+        h.content));
+    }
+
+    $('search-form').onsubmit = async (event) => {
+      event.preventDefault();
+      const form = event.target;
+      try {
+        const hits = await api(`/admin/characters/${current.id}/search`, { method: 'POST', body: {
+          query: form.elements.query.value, limit: Number(form.elements.limit.value),
+        } });
+        $('search-results').replaceChildren(...renderHits(hits));
+      } catch (error) {
+        $('search-results').replaceChildren(el('div', { className: 'error', textContent: error.message }));
+      }
+    };
+
+    // ---------- 채팅 테스트 ----------
+    function bubble(role, text = '') {
+      const node = el('div', { className: `bubble ${role}`, textContent: text });
+      $('chat-log').append(node);
+      $('chat-log').scrollTop = $('chat-log').scrollHeight;
+      return node;
+    }
+
+    $('chat-reset').onclick = () => { chatSessionId = null; $('chat-log').replaceChildren(); };
+
+    $('chat-form').onsubmit = async (event) => {
+      event.preventDefault();
+      const input = event.target.elements.text;
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = '';
+      const button = event.target.querySelector('button');
+      button.disabled = true;
+      try {
+        if (!chatSessionId) {
+          const session = await api('/admin/chat/sessions', { method: 'POST', body: { characterId: current.id } });
+          chatSessionId = session.sessionId;
+          if (session.character.greeting) bubble('assistant', session.character.greeting);
+        }
+        bubble('user', text);
+        await streamReply(text);
+      } catch (error) {
+        bubble('system', `오류: ${error.message}`);
+      } finally {
+        button.disabled = false;
+        input.focus();
+      }
+    };
+
+    async function streamReply(text) {
+      const started = performance.now();
+      const response = await fetch(`${API}/admin/chat/sessions/${chatSessionId}/messages`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+      });
+      if (response.status === 404) chatSessionId = null;
+      if (!response.ok) throw new Error(await errorMessage(response));
+
+      let answer = null;
+      let firstTokenMs = null;
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      for (;;) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        let end;
+        while ((end = buffer.indexOf('\n\n')) >= 0) {
+          const block = buffer.slice(0, end);
+          buffer = buffer.slice(end + 2);
+          const name = block.match(/^event: (.*)$/m)?.[1];
+          const data = JSON.parse(block.match(/^data: (.*)$/m)?.[1] ?? '{}');
+          if (name === 'context') {
+            const details = el('details', { className: 'context' },
+              el('summary', { textContent: `검색된 기억 ${data.memories.length}개` + (data.memories.length ? ` (최고 유사도 ${data.memories[0].score.toFixed(3)})` : '') }),
+              ...renderHits(data.memories),
+              el('details', {}, el('summary', { textContent: '시스템 프롬프트' }), el('pre', { textContent: data.systemPrompt })));
+            $('chat-log').append(details);
+          } else if (name === 'delta') {
+            if (!answer) { answer = bubble('assistant'); firstTokenMs = Math.round(performance.now() - started); }
+            answer.textContent += data.text;
+            $('chat-log').scrollTop = $('chat-log').scrollHeight;
+          } else if (name === 'done') {
+            $('chat-log').append(el('div', { className: 'meta', textContent: `첫 글자 ${firstTokenMs}ms · 전체 ${Math.round(performance.now() - started)}ms` }));
+          } else if (name === 'error') {
+            bubble('system', `응답 실패: ${data.message} (${data.code})`);
+          }
+        }
+      }
+    }
+
+    if (token) start();
+  </script>
+</body>
+</html>
