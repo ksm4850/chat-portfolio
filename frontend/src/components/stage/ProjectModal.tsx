@@ -37,7 +37,7 @@ export function ProjectModal() {
         aria-hidden
         onClick={closeProject}
         className={cn(
-          'absolute inset-0 bg-black/25 backdrop-blur-[2px] fill-mode-forwards',
+          'absolute inset-0 bg-black/40 fill-mode-forwards',
           closing ? 'animate-out fade-out duration-200' : 'animate-in fade-in duration-300',
         )}
       />
@@ -51,7 +51,7 @@ export function ProjectModal() {
           }
         }}
         className={cn(
-          'absolute inset-3 mx-auto flex max-w-4xl flex-col overflow-hidden rounded-2xl border bg-background shadow-2xl fill-mode-forwards md:inset-6',
+          'absolute inset-3 mx-auto flex max-w-4xl flex-col overflow-hidden rounded-2xl border bg-background shadow-xl fill-mode-forwards md:inset-6',
           closing
             ? 'animate-out fade-out zoom-out-95 slide-out-to-bottom-4 duration-200 ease-in'
             : 'animate-in fade-in zoom-in-95 slide-in-from-bottom-6 duration-300 ease-out',
