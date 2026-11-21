@@ -182,7 +182,8 @@ export const ChatMessage = memo(function ChatMessage({ id }: { id: string }) {
         <Sparkles className="size-3.5" />
       </div>
       <div className="min-w-0 flex-1 space-y-2">
-        {message.sources.length > 0 && (
+        {/* LLM 답변은 자료를 따로 보여 주지 않는다. 검색 모드에서는 자료 목록이 답이다. */}
+        {message.notice && message.sources.length > 0 && (
           <SourceList
             sources={message.sources}
             shownAnchors={message.actions
