@@ -63,7 +63,7 @@ class KnowledgeService:
         _ensure_editable_source(payload.source)
         await self._characters.ensure_exists(character_id)
         texts = self._split(payload.content)
-        embeddings = await self._embed(texts)
+        embeddings = await self._embed([embedding_text(t, None, payload.title) for t in texts])
 
         async with self._db.transaction() as session:
             document = await self._documents.add(
@@ -110,14 +110,17 @@ class KnowledgeService:
         async with self._db.read() as session:
             current = await self._find_document(session, character_id, document_id)
             _ensure_editable_source(current.source)
+            current_title, current_content = current.title, current.content
         if payload.source is not None:
             _ensure_editable_source(payload.source)
 
+        # 제목도 임베딩 문맥이라 제목만 바뀌어도 다시 임베딩한다.
         texts: list[str] | None = None
         embeddings: list[list[float]] = []
-        if payload.content is not None:
-            texts = self._split(payload.content)
-            embeddings = await self._embed(texts)
+        title = payload.title or current_title
+        if payload.content is not None or title != current_title:
+            texts = self._split(payload.content or current_content)
+            embeddings = await self._embed([embedding_text(t, None, title) for t in texts])
 
         async with self._db.transaction() as session:
             document = await self._find_document(session, character_id, document_id)
@@ -145,7 +148,13 @@ class KnowledgeService:
         """
         await self._characters.ensure_exists(character_id)
         chunks = [chunk for draft in drafts for chunk in draft.chunks]
-        embeddings = await self._embed([embedding_text(c.content, c.meta) for c in chunks])
+        embeddings = await self._embed(
+            [
+                embedding_text(c.content, c.meta, draft.title)
+                for draft in drafts
+                for c in draft.chunks
+            ]
+        )
         vectors = iter(embeddings)
 
         async with self._db.transaction() as session:
@@ -237,8 +246,10 @@ class KnowledgeService:
         while True:
             async with self._db.read() as session:
                 batch = [
-                    (chunk.id, embedding_text(chunk.content, chunk.meta))
-                    for chunk in await self._chunks.list_after(session, after, limit=_REEMBED_BATCH)
+                    (chunk.id, embedding_text(chunk.content, chunk.meta, title))
+                    for chunk, title in await self._chunks.list_after(
+                        session, after, limit=_REEMBED_BATCH
+                    )
                 ]
             if not batch:
                 break
@@ -277,13 +288,13 @@ class KnowledgeService:
             raise EmbeddingFailedError() from exc
 
 
-def embedding_text(content: str, meta: dict | None) -> str:
-    """위치 문맥(`meta.path`)이 있으면 앞에 붙여 임베딩한다.
+def embedding_text(content: str, meta: dict | None, title: str | None = None) -> str:
+    """위치 문맥(`meta.path`), 없으면 문서 제목을 앞에 붙여 임베딩한다.
 
-    짧은 섹션도 어느 프로젝트 얘기인지 검색되게 한다.
+    문서가 여러 청크로 나뉘어도 각 청크가 어느 문서 얘기인지 검색되게 한다.
     """
-    path = (meta or {}).get("path")
-    return f"[{path}]\n{content}" if path else content
+    context = (meta or {}).get("path") or title
+    return f"[{context}]\n{content}" if context else content
 
 
 def _ensure_editable_source(source: str) -> None:

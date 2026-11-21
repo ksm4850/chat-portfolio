@@ -58,9 +58,14 @@ class ChunkRepository(BaseRepository[Chunk]):
 
     async def list_after(
         self, session: AsyncSession, after: uuid.UUID | None, *, limit: int
-    ) -> Sequence[Chunk]:
-        """재임베딩용. id 순으로 끊어 읽는다."""
-        statement = select(Chunk).order_by(Chunk.id).limit(limit)
+    ) -> Sequence[tuple[Chunk, str]]:
+        """재임베딩용. 문서 제목과 함께 id 순으로 끊어 읽는다."""
+        statement = (
+            select(Chunk, Document.title)
+            .join(Document, Document.id == Chunk.document_id)
+            .order_by(Chunk.id)
+            .limit(limit)
+        )
         if after is not None:
             statement = statement.where(Chunk.id > after)
-        return (await session.execute(statement)).scalars().all()
+        return [(chunk, title) for chunk, title in (await session.execute(statement)).all()]
