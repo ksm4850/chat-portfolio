@@ -27,6 +27,7 @@ class GuideOptions:
     llm_enabled: bool
     search_limit: int
     source_min_score: float
+    source_max_gap: float
     action_min_score: float
     history_turns: int
     history_max_turns: int

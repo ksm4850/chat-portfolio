@@ -112,10 +112,12 @@ class Settings(BaseSettings):
     guide_character_slug: str = "me"
     # False 면 LLM 없이 검색 결과로만 답한다(폴백).
     guide_llm_enabled: bool = True
-    guide_search_limit: int = 6
-    # 코사인 유사도 기준(OpenAI 임베딩). sources 에 넣는 최소 점수 < 폴백이 화면을 여는 최소 점수.
-    # 정답 섹션 0.38~0.67, 범위 밖 질문 0.18~0.39 로 측정했다(tests/eval/cases.yaml).
-    guide_source_min_score: float = 0.30
+    guide_search_limit: int = 4
+    # 코사인 유사도 기준(OpenAI 임베딩). 자료 최소 점수 < 폴백이 화면을 여는 최소 점수.
+    # 자료는 최소 점수 이상이면서 1위와 max_gap 이내인 것만 LLM 에 넣는다.
+    # 문서 제목 임베딩 후 tests/eval/cases.yaml 로 재어 질문당 평균 5.1 → 2.0개, 정답 포함 15/17.
+    guide_source_min_score: float = 0.35
+    guide_source_max_gap: float = 0.08
     guide_action_min_score: float = 0.45
     # 대화 맥락. 최근 history_max_turns 턴을 보관하고, 그중 최근 history_turns 턴은 질문·답변으로,
     # 나머지는 질문만 넣는다. 답변은 history_answer_max_chars 에서 자른다.

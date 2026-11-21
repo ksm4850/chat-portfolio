@@ -56,6 +56,7 @@ OPTIONS = GuideOptions(
     llm_enabled=True,
     search_limit=6,
     source_min_score=0.45,
+    source_max_gap=1.0,
     action_min_score=0.55,
     history_turns=3,
     history_max_turns=8,

@@ -22,7 +22,7 @@ from src.core.container import AppContainer
 from src.infrastructure.tracing import NoopTracer
 from src.modules.chat.limits import ChatUsageGuard
 from src.modules.guide.schema import GuideLogCreate, ModeChanged, TextDelta, ToolCalled
-from src.modules.guide.service import GuideLogService
+from src.modules.guide.service import GuideLogService, relevant_hits
 from tests.eval.judge import JudgeModel, judge_client
 
 os.environ.setdefault("DEEPEVAL_TELEMETRY_OPT_OUT", "1")
@@ -126,11 +126,12 @@ class GuideRunner:
         hits = await self._container.knowledge.service().search(
             self._character.id, question, limit=self.settings.guide_search_limit
         )
-        materials = [
-            f"[{hit.title}] {hit.content}"
-            for hit in hits
-            if hit.score >= self.settings.guide_source_min_score
-        ]
+        relevant = relevant_hits(
+            hits,
+            min_score=self.settings.guide_source_min_score,
+            max_gap=self.settings.guide_source_max_gap,
+        )
+        materials = [f"[{hit.title}] {hit.content}" for hit in relevant]
         return [f"[프로필] {self._character.profile}", *materials]
 
 

@@ -29,6 +29,7 @@ def hyperparameters() -> dict:
         "judge": judge_model_name(settings) if USE_JUDGE else "off",
         "searchLimit": settings.guide_search_limit,
         "sourceMinScore": settings.guide_source_min_score,
+        "sourceMaxGap": settings.guide_source_max_gap,
         "actionMinScore": settings.guide_action_min_score,
     }
 

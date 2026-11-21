@@ -238,7 +238,11 @@ class GuideService:
                 character.id, queries, limit=self._options.search_limit
             )
             retrieval.end(output=[_traced_hit(hit) for hit in hits])
-            relevant = [hit for hit in hits if hit.score >= self._options.source_min_score]
+            relevant = relevant_hits(
+                hits,
+                min_score=self._options.source_min_score,
+                max_gap=self._options.source_max_gap,
+            )
             locations = await self._portfolio.locations()
             use_llm = self._options.llm_enabled and await self._guard.try_llm_call()
         except Exception as exc:
@@ -553,6 +557,14 @@ class _Run:
                 logger.info("섹션에 없는 quote 를 버림", extra={"anchor": anchor})
             events.append(ToolCalled("highlight", args))
         return events
+
+
+def relevant_hits(hits: list[SearchHit], *, min_score: float, max_gap: float) -> list[SearchHit]:
+    """점수순 `hits` 중 최소 점수 이상이면서 1위와 `max_gap` 이내인 것만 남긴다."""
+    if not hits:
+        return []
+    floor = max(min_score, hits[0].score - max_gap)
+    return [hit for hit in hits if hit.score >= floor]
 
 
 def _materials(relevant: list[SearchHit], locations: dict[str, SectionLocation]) -> str:

@@ -103,6 +103,7 @@ class AppContainer(containers.DeclarativeContainer):
         llm_enabled=settings.provided.guide_llm_enabled,
         search_limit=settings.provided.guide_search_limit,
         source_min_score=settings.provided.guide_source_min_score,
+        source_max_gap=settings.provided.guide_source_max_gap,
         action_min_score=settings.provided.guide_action_min_score,
         history_turns=settings.provided.guide_history_turns,
         history_max_turns=settings.provided.guide_history_max_turns,
