@@ -22,7 +22,10 @@ export function Landing() {
             <span className="size-1.5 rounded-full bg-emerald-500" />
             AI가 포트폴리오를 안내합니다
           </span>
-          <h1 className="mt-4 text-3xl font-bold tracking-tight md:text-4xl">백엔드 개발자 김상명입니다</h1>
+          <h1 className="mt-4 text-xl font-bold tracking-tight break-keep sm:text-3xl md:text-4xl">
+            <span className="block">빠르게 배우고 끝까지 책임지는</span>
+            <span className="block">개발자 김상명입니다</span>
+          </h1>
           <p className="mt-3 text-muted-foreground">궁금한 점을 물어보시면 답변과 함께 관련 화면을 바로 보여 드립니다.</p>
         </div>
 

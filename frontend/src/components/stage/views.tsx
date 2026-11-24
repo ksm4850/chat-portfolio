@@ -83,8 +83,9 @@ export function HomeView() {
       ) : (
         <>
           <p className="text-sm text-muted-foreground">{data.profile.role}</p>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight md:text-3xl">
-            {data.profile.headline}, {data.profile.name}입니다
+          <h1 className="mt-1 text-xl font-bold tracking-tight break-keep sm:text-2xl md:text-3xl">
+            <span className="block">{data.profile.headline}</span>
+            <span className="block">{data.profile.name}입니다</span>
           </h1>
           <p className="mt-3 text-muted-foreground">
             Python·Go 기반 백엔드와 AWS 인프라를 설계하고 운영합니다. 프로젝트를 직접 둘러보시거나 채팅으로 물어보십시오.
