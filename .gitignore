@@ -23,3 +23,6 @@ backend/.deepeval/
 # 운영 TLS 인증서
 deploy/certs/*
 !deploy/certs/README.md
+
+# macOS
+.DS_Store
