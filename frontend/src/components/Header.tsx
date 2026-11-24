@@ -25,11 +25,7 @@ export function Header() {
         onClick={() => void navigate({ view: 'home' })}
         className="flex items-center gap-2"
       >
-        <span className="flex size-7 items-center justify-center rounded-md bg-primary text-xs font-bold text-primary-foreground">
-          김
-        </span>
-        <span className="text-sm font-semibold">김상명</span>
-        <span className="hidden text-sm text-muted-foreground sm:inline">Backend</span>
+        <span className="text-sm font-semibold">김상명 Portfolio</span>
       </button>
 
       <div className="flex items-center gap-2">
