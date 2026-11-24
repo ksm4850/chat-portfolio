@@ -46,7 +46,7 @@ export const Composer = memo(function Composer({ onSubmit, disabled, size = 'def
         onKeyDown={onKeyDown}
         rows={large ? 2 : 1}
         autoFocus={autoFocus}
-        placeholder={placeholder ?? '무엇이든 물어보십시오'}
+        placeholder={placeholder ?? '무엇이든 편하게 물어봐 주세요'}
         className={cn(
           'resize-none border-0 bg-transparent shadow-none focus-visible:ring-0 dark:bg-transparent',
           large ? 'min-h-16 text-base md:text-[15px]' : 'max-h-32 min-h-9 text-sm',

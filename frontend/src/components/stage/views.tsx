@@ -88,7 +88,7 @@ export function HomeView() {
             <span className="block">{data.profile.name}입니다</span>
           </h1>
           <p className="mt-3 text-muted-foreground">
-            Python·Go 기반 백엔드와 AWS 인프라를 설계하고 운영합니다. 프로젝트를 직접 둘러보시거나 채팅으로 물어보십시오.
+            Python·Go 기반 백엔드와 AWS 인프라를 설계하고 운영합니다. 프로젝트를 직접 둘러보시거나, 궁금한 점은 채팅으로 편하게 물어봐 주세요.
           </p>
           {data.careers.map((c) => (
             <section key={c.company} className="mt-12">

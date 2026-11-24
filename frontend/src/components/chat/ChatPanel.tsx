@@ -71,7 +71,7 @@ export function ChatPanel() {
           <div className="flex h-full flex-col items-center justify-center text-center text-sm text-muted-foreground">
             <Sparkles className="mb-3 size-6" />
             <p>
-              프로젝트, 경력, 기술에 대해 물어보십시오.
+              프로젝트, 경력, 기술에 대해 편하게 물어봐 주세요.
               <br />
               답변과 함께 관련 화면을 열어 드립니다.
             </p>
