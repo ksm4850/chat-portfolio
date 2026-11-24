@@ -1,4 +1,4 @@
-export type Profile = { name: string; headline: string; role: string }
+export type Profile = { name: string }
 
 export type Career = {
   company: string

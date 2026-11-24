@@ -56,7 +56,7 @@
 
 ```json
 {
-  "profile": { "name": "김상명", "headline": "...", "role": "..." },
+  "profile": { "name": "김상명" },
   "careers": [{ "company": "...", "period": "...", "description": "...", "roles": ["Backend"], "projectIds": ["cq"] }],
   "projects": [{
     "id": "cq", "company": "...", "title": "...", "period": "...", "summary": "...",

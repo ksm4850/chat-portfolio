@@ -5,8 +5,6 @@ from src.shared.schema import CamelModel
 
 class Profile(CamelModel):
     name: str
-    headline: str
-    role: str
 
 
 class Career(CamelModel):

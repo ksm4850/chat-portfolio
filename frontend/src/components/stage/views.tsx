@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { toPublicUrl } from '@/lib/media'
 import { usePortfolio, useProject } from '@/lib/queries'
+import { HEADLINE_LINES, ROLE } from '@/lib/profile'
 import { navigate } from '@/lib/tools'
 import type { ProjectSummary, Section } from '@/lib/types'
 import { cn } from '@/lib/utils'
@@ -82,10 +83,13 @@ export function HomeView() {
         <Loading />
       ) : (
         <>
-          <p className="text-sm text-muted-foreground">{data.profile.role}</p>
+          <p className="text-sm text-muted-foreground">{ROLE}</p>
           <h1 className="mt-1 text-xl font-bold tracking-tight break-keep sm:text-2xl md:text-3xl">
-            <span className="block">{data.profile.headline}</span>
-            <span className="block">{data.profile.name}입니다</span>
+            {HEADLINE_LINES.map((line) => (
+              <span key={line} className="block">
+                {line}
+              </span>
+            ))}
           </h1>
           <p className="mt-3 text-muted-foreground">
             Python·Go 기반 백엔드와 AWS 인프라를 설계하고 운영합니다. 프로젝트를 직접 둘러보시거나, 궁금한 점은 채팅으로 편하게 물어봐 주세요.
