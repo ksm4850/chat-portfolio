@@ -7,7 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { toPublicUrl } from '@/lib/media'
 import { usePortfolio, useProject } from '@/lib/queries'
-import { HEADLINE_LINES, ROLE } from '@/lib/profile'
+import { HEADLINE_LINES } from '@/lib/profile'
 import { navigate } from '@/lib/tools'
 import type { ProjectSummary, Section } from '@/lib/types'
 import { cn } from '@/lib/utils'
@@ -83,8 +83,7 @@ export function HomeView() {
         <Loading />
       ) : (
         <>
-          <p className="text-sm text-muted-foreground">{ROLE}</p>
-          <h1 className="mt-1 text-xl font-bold tracking-tight break-keep sm:text-2xl md:text-3xl">
+          <h1 className="text-xl font-bold tracking-tight break-keep sm:text-2xl md:text-3xl">
             {HEADLINE_LINES.map((line) => (
               <span key={line} className="block">
                 {line}
