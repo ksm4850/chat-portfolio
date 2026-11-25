@@ -91,7 +91,7 @@ export function HomeView() {
             ))}
           </h1>
           <p className="mt-3 text-muted-foreground">
-            Python·Go 기반 백엔드와 AWS 인프라를 설계하고 운영합니다. 프로젝트를 직접 둘러보시거나, 궁금한 점은 채팅으로 편하게 물어봐 주세요.
+            프론트엔드부터 백엔드, 인프라까지 필요한 기술은 빠르게 익혀 서비스 전체를 직접 만들고 운영해 왔습니다. 프로젝트를 둘러보시거나, 궁금한 점은 채팅으로 편하게 물어봐 주세요.
           </p>
           {data.careers.map((c) => (
             <section key={c.company} className="mt-12">
