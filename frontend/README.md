@@ -13,6 +13,14 @@ pnpm build
 
 GA4는 `VITE_GA_ID`(예: `G-XXXX`)가 있을 때만 붙는다. 로컬은 `.env.local`에 넣는다. 안내 run에 GA client_id를 `forwardedProps.gaClientId`로 함께 보낸다.
 
+URL이 바뀌지 않으므로 화면 전환(`useUi`)을 가상 경로(`/home`, `/project/<id>/<tab>`)의 `page_view`로 보낸다. 첫 화면 `/`는 GA 자동 페이지뷰다. 이벤트는 `src/lib/analytics.ts`의 `track()`으로 보내고, 파라미터는 GA 맞춤 측정기준에 등록해야 보고서에 나온다.
+
+| 이벤트 | 파라미터 |
+|---|---|
+| `ask_question` | `ask_method`(typed·suggestion), `ask_location`(landing·chat) |
+| `chat_toggle` | `chat_open`(true·false) |
+| `open_source`, `open_media` | `project_id` |
+
 ## 구조
 
 - `src/lib/tools.ts` - 툴 레지스트리. `contracts/tools.json`으로 인자를 검증하고 실행한다. 사용자 클릭도 같은 `navigate`를 쓴다.

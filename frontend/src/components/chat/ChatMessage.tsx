@@ -1,5 +1,6 @@
 import { ChevronRight, CircleAlert, FileText, Info, Sparkles } from 'lucide-react'
 import { memo, useState } from 'react'
+import { track } from '@/lib/analytics'
 import { usePortfolio } from '@/lib/queries'
 import { navigate, runTool } from '@/lib/tools'
 import type { Portfolio, Source } from '@/lib/types'
@@ -24,6 +25,7 @@ function actionLabel(a: ChatAction, portfolio: Portfolio | null) {
 
 async function openSource(s: Source) {
   if (!s.location) return
+  track('open_source', { project_id: s.location.projectId })
   await navigate({ view: 'project', projectId: s.location.projectId, tab: s.location.tab })
   await runTool('highlight', { anchor: s.location.anchor })
 }

@@ -4,6 +4,7 @@ import { ChatMessage } from '@/components/chat/ChatMessage'
 import { Composer } from '@/components/Composer'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { track } from '@/lib/analytics'
 import { SUGGESTIONS } from '@/lib/suggestions'
 import { useChat } from '@/store/chat'
 import { useUi } from '@/store/ui'
@@ -23,6 +24,11 @@ export function ChatPanel() {
   const contentRef = useRef<HTMLDivElement>(null)
   const stickToBottom = useRef(true)
   const hasMessages = messageIds.length > 0
+
+  const send = (question: string, method: 'typed' | 'suggestion') => {
+    track('ask_question', { ask_method: method, ask_location: 'chat' })
+    void ask(question)
+  }
 
   useLayoutEffect(() => {
     stickToBottom.current = true
@@ -83,13 +89,13 @@ export function ChatPanel() {
         {!hasMessages && (
           <div className="mb-2 flex gap-1.5 overflow-x-auto pb-1">
             {SUGGESTIONS.map((s) => (
-              <Button key={s} variant="outline" size="xs" className="shrink-0 rounded-full text-muted-foreground" onClick={() => ask(s)}>
+              <Button key={s} variant="outline" size="xs" className="shrink-0 rounded-full text-muted-foreground" onClick={() => send(s, 'suggestion')}>
                 {s}
               </Button>
             ))}
           </div>
         )}
-        <Composer onSubmit={ask} disabled={busy} />
+        <Composer onSubmit={(q) => send(q, 'typed')} disabled={busy} />
       </div>
     </aside>
   )

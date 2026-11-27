@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { track } from '@/lib/analytics'
 import { toPublicUrl } from '@/lib/media'
 import { usePortfolio, useProject } from '@/lib/queries'
 import { HEADLINE_LINES } from '@/lib/profile'
@@ -251,7 +252,14 @@ export function ProjectView({ project: ref }: { project: ProjectRef }) {
           {project.media.length > 0 && (
             <div className="mt-6 flex snap-x gap-3 overflow-x-auto pb-2">
               {project.media.map((m) => (
-                <a key={m} href={toPublicUrl(m)} target="_blank" rel="noreferrer" className="shrink-0 snap-start">
+                <a
+                  key={m}
+                  href={toPublicUrl(m)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="shrink-0 snap-start"
+                  onClick={() => track('open_media', { project_id: project.id })}
+                >
                   <img src={toPublicUrl(m)} alt="" loading="lazy" className="h-44 w-auto rounded-lg border object-cover" />
                 </a>
               ))}

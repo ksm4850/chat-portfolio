@@ -1,6 +1,7 @@
 import { ArrowRight } from 'lucide-react'
 import { Composer } from '@/components/Composer'
 import { Button } from '@/components/ui/button'
+import { track } from '@/lib/analytics'
 import { HEADLINE_LINES } from '@/lib/profile'
 import { SUGGESTIONS } from '@/lib/suggestions'
 import { useChat } from '@/store/chat'
@@ -10,7 +11,8 @@ export function Landing() {
   const ask = useChat((s) => s.ask)
   const openApp = useUi((s) => s.openApp)
 
-  const start = (question: string) => {
+  const start = (question: string, method: 'typed' | 'suggestion') => {
+    track('ask_question', { ask_method: method, ask_location: 'landing' })
     openApp({ chat: true })
     void ask(question)
   }
@@ -33,11 +35,11 @@ export function Landing() {
           <p className="mt-3 text-muted-foreground">궁금한 점을 물어보시면 답변과 함께 관련 화면을 바로 보여 드립니다.</p>
         </div>
 
-        <Composer size="lg" autoFocus onSubmit={start} placeholder="예) 자기소개 부탁드립니다" />
+        <Composer size="lg" autoFocus onSubmit={(q) => start(q, 'typed')} placeholder="예) 자기소개 부탁드립니다" />
 
         <div className="mt-4 flex flex-wrap justify-center gap-2">
           {SUGGESTIONS.map((s) => (
-            <Button key={s} variant="outline" size="sm" className="rounded-full text-muted-foreground" onClick={() => start(s)}>
+            <Button key={s} variant="outline" size="sm" className="rounded-full text-muted-foreground" onClick={() => start(s, 'suggestion')}>
               {s}
             </Button>
           ))}
